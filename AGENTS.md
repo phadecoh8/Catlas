@@ -81,7 +81,7 @@ Owner and founder: Fadero Joshua (phadecoh). Long-term scale target: 300,000+ us
 
 **apps/api/.env.example:** `PORT`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `CRON_SECRET`, `RESEND_API_KEY`, `GOOGLE_MAPS_SERVER_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `GEMINI_API_KEY`, `FOUNDER_EMAIL`, `FOUNDER_INITIAL_PASSWORD`, `FRONTEND_URL`
 
-**apps/web/.env.example:** `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FOUNDER_EMAIL`
+**apps/web/.env.example:** `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `SITE_URL`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FOUNDER_EMAIL`
 
 Only the browser Google Maps key, the Cloudinary cloud name, and the Supabase project URL and publishable key may use the `NEXT_PUBLIC_` prefix. Keep the Supabase secret key server-side. The legacy anon and service-role variables are supported as fallbacks. Restrict the Maps key to Catlas domains. Image uploads go through the backend using signed uploads, never with the Cloudinary secret in the browser. `FOUNDER_INITIAL_PASSWORD` is used once to create the founder account, must be changed at first login, and should be removed from `.env` afterwards.
 

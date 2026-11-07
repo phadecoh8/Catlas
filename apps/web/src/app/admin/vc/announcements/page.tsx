@@ -1,1 +1,5 @@
-// TODO: apps/web/src/app/admin/vc/announcements/page.tsx
+import { RoutePlaceholder } from "@/components/layout/route-placeholder";
+
+export default function PlaceholderPage() {
+  return <RoutePlaceholder title="Announcements" />;
+}

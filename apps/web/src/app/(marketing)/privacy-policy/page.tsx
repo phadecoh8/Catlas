@@ -1,1 +1,5 @@
-// TODO: apps/web/src/app/(marketing)/privacy-policy/page.tsx
+import { notFound } from "next/navigation";
+
+export default function LegalPage() {
+  notFound();
+}

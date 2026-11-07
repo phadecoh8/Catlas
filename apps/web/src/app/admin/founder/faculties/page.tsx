@@ -1,1 +1,5 @@
-// TODO: apps/web/src/app/admin/founder/faculties/page.tsx
+import { RoutePlaceholder } from "@/components/layout/route-placeholder";
+
+export default function PlaceholderPage() {
+  return <RoutePlaceholder title="Faculties" />;
+}

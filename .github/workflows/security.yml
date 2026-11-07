@@ -1,0 +1,20 @@
+name: Security
+
+# TODO: secret scanning, dependency audit and CodeQL.
+# Details in docs/DEVSECOPS.md.
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm audit --audit-level high

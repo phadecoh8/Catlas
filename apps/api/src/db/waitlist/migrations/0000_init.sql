@@ -1,0 +1,1 @@
+-- TODO: generated from drizzle.waitlist.config.ts. Do not edit by hand.

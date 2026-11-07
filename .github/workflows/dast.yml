@@ -1,0 +1,15 @@
+name: DAST
+
+# TODO: weekly scan against a staging copy.
+# Details in docs/DEVSECOPS.md.
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Not configured yet."

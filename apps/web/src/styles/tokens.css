@@ -1,0 +1,56 @@
+:root {
+  color-scheme: dark;
+  --color-bg: #17181c;
+  --color-surface: #1f2228;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #2563eb;
+  --color-ash: #333333;
+  --color-black: #000000;
+  --color-text: #f7f7f8;
+  --color-error: #ef4444;
+  --color-destination: #ef4444;
+  --color-success: #10b981;
+  --color-error-text: #dc2626;
+  --color-success-text: #047857;
+  --color-border: #343840;
+  --color-muted: #a3a7b0;
+  --font-heading: "Times New Roman", Tinos, Times, serif;
+  --font-body: Arial, Arimo, Helvetica, sans-serif;
+}
+
+[data-theme="sepia"] {
+  color-scheme: light;
+  --color-bg: #f5f1d6;
+  --color-surface: #fff1e6;
+  --color-ash: #f2e2d4;
+  --color-text: #111827;
+  --color-border: #e8d9ca;
+  --color-muted: #625b54;
+  --color-success-text: #047857;
+}
+
+[data-theme="amoled"] {
+  color-scheme: dark;
+  --color-bg: #000000;
+  --color-surface: #080808;
+  --color-ash: #171717;
+  --color-text: #f5f5f5;
+  --color-border: #262626;
+  --color-muted: #a3a3a3;
+  --color-primary: #2563eb;
+  --color-primary-hover: #3b82f6;
+  --color-success-text: #34d399;
+}
+
+[data-theme="midnight"] {
+  color-scheme: dark;
+  --color-bg: #0b1020;
+  --color-surface: #111a2e;
+  --color-ash: #1a2540;
+  --color-text: #e8eefb;
+  --color-border: #293550;
+  --color-muted: #a4b1c6;
+  --color-primary: #536dfe;
+  --color-primary-hover: #7187ff;
+  --color-success-text: #4ade80;
+}

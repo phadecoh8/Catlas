@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+.next/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+
+*.ts
+*.tsx
+*.js
+*.jsx
+*.mjs
+*.cjs

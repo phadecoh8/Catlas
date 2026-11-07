@@ -1,0 +1,23 @@
+packages:
+  - apps/*
+
+allowBuilds:
+  '@google/genai': false
+  esbuild: false
+  protobufjs: false
+  unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@7.0.0'
+  - '@otplib/core@13.6.0'
+  - '@otplib/hotp@13.6.0'
+  - '@otplib/plugin-base32-scure@13.6.0'
+  - '@otplib/plugin-crypto-noble@13.6.0'
+  - '@otplib/totp@13.6.0'
+  - '@otplib/uri@13.6.0'
+  - lucide-react@1.66.0
+  - otplib@13.6.0
+  - resend@6.37.0
+
+onlyBuiltDependencies:
+  - esbuild

@@ -12,6 +12,11 @@
   --color-success: #10b981;
   --color-error-text: #dc2626;
   --color-success-text: #047857;
+  --cat-fur: #397be7;
+  --cat-fur-light: #a8d2ff;
+  --cat-fur-dark: #163e89;
+  --cat-eye: #14213d;
+  --cat-nose: #f0a2a8;
   --color-border: #343840;
   --color-muted: #a3a7b0;
   --font-heading: "Times New Roman", Tinos, Times, serif;
@@ -27,6 +32,11 @@
   --color-border: #e8d9ca;
   --color-muted: #625b54;
   --color-success-text: #047857;
+  --cat-fur: #8b633f;
+  --cat-fur-light: #e1bd91;
+  --cat-fur-dark: #4d3725;
+  --cat-eye: #30251c;
+  --cat-nose: #b66d68;
 }
 
 [data-theme="amoled"] {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { CatlasLogo } from "@/components/layout/logo";
 
 export const metadata: Metadata = {
   title: "Join the waitlist | Catlas",
@@ -20,15 +20,7 @@ export default function JoinPage() {
           className="brand"
           href="/"
         >
-          <span className="brand-mark">
-            <Image
-              alt=""
-              className="brand-logo"
-              height={31}
-              src="/logo.png"
-              width={31}
-            />
-          </span>
+          <span className="brand-mark"><CatlasLogo /></span>
           <span>
             Catlas<span className="brand-period">.</span>
           </span>

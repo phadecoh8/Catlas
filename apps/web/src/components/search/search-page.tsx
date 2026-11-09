@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import { CalmCat } from "@/components/cats/calm-cat";
 import {
   BookOpen,
   Bookmark,
@@ -271,7 +272,10 @@ function FuzzySearchResults({ query }: { query: string }) {
 function SearchNotFound() {
   return (
     <section className="search-empty-state">
-      <div aria-hidden="true" className="search-empty-avatar">cat</div>
+      <CalmCat
+        className="search-empty-avatar"
+        size={96}
+      />
       <h2>No place found</h2>
       <p>Check the spelling or try a building name</p>
       <Link href="/settings/feedback">Report a missing place</Link>

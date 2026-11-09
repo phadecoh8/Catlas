@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ScrollLink } from "@/components/landing/scroll-link";
+import { CatlasLogo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function LandingHeader() {
@@ -11,16 +11,7 @@ export function LandingHeader() {
         className="brand"
         targetId="top"
       >
-        <span className="brand-mark">
-          <Image
-            alt=""
-            className="brand-logo"
-            height={31}
-            priority
-            src="/logo.png"
-            width={31}
-          />
-        </span>
+        <span className="brand-mark"><CatlasLogo /></span>
         <span>
           Catlas<span className="brand-period">.</span>
         </span>

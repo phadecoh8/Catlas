@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { getSession, signIn } from "next-auth/react";
 import { useState, type FormEvent } from "react";
+import { CatlasLogo } from "@/components/layout/logo";
 
 type LoginResult = {
   message?: string;
@@ -103,14 +103,7 @@ export function AdminLoginForm() {
         className="admin-login-card"
       >
         <a aria-label="Catlas home" className="admin-login-brand" href="/">
-          <Image
-            alt=""
-            className="admin-login-logo"
-            height={42}
-            priority
-            src="/logo.png"
-            width={42}
-          />
+          <CatlasLogo className="admin-login-logo" />
           <span>Catlas</span>
         </a>
 

@@ -7,10 +7,12 @@ import {
   ChevronRight,
   CircleHelp,
   Download,
+  UserRoundPlus,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 function PreferenceRow({
   Icon,
@@ -142,6 +144,13 @@ export default function SettingsPage() {
             Icon={CircleHelp}
             title="Feedback"
           />
+          <SettingsLink
+            color="purple"
+            description="Meet the founder and find their links"
+            href="/settings/founder"
+            Icon={UserRoundPlus}
+            title="Founder"
+          />
         </div>
       </section>
 
@@ -152,7 +161,7 @@ export default function SettingsPage() {
       <div className="settings-legal-links">
         <Link href="/settings/privacy-policy">Privacy policy</Link>
         <Link href="/settings/terms-of-service">Terms of service</Link>
-        <Link href="/login">Log out</Link>
+        <SignOutButton />
       </div>
 
     </main>

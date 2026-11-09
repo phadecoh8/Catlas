@@ -1,5 +1,13 @@
-import { RoutePlaceholder } from "@/components/layout/route-placeholder";
+import { redirect } from "next/navigation";
+import { SignupForm } from "@/components/auth/signup-form";
+import { auth } from "@/lib/auth";
 
-export default function PlaceholderPage() {
-  return <RoutePlaceholder title="Signup" />;
+export default async function SignupPage() {
+  const session = await auth();
+
+  if (session?.user.id && !session.error) {
+    redirect(session.redirectTo || "/home");
+  }
+
+  return <SignupForm />;
 }

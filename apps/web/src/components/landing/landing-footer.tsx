@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CatlasLogo } from "@/components/layout/logo";
 
 // Placeholder destinations until the owner supplies the real profile URLs.
 const instagramUrl = "https://instagram.com";
@@ -88,15 +88,7 @@ export function LandingFooter() {
         className="brand footer-brand"
         href="/"
       >
-        <span className="brand-mark">
-          <Image
-            alt=""
-            className="brand-logo"
-            height={31}
-            src="/logo.png"
-            width={31}
-          />
-        </span>
+        <span className="brand-mark"><CatlasLogo /></span>
         <span>
           Catlas<span className="brand-period">.</span>
         </span>

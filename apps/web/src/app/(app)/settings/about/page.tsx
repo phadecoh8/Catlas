@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft, MapPin, Search, Waypoints } from "lucide-react";
+import { CatlasLogo } from "@/components/layout/logo";
 
 const steps = [
   {
@@ -28,7 +28,7 @@ export default function AboutPage() {
         <h1>About Catlas</h1>
       </div>
       <div className="about-brand">
-        <Image alt="Catlas" height={72} src="/logo.png" width={72} />
+        <CatlasLogo className="about-brand-logo" />
         <p>Campus Navigation System</p>
       </div>
       <section className="about-intro">

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { CatlasLogo } from "@/components/layout/logo";
 import {
   AlertTriangle,
   Eye,
@@ -117,14 +117,7 @@ export function FounderAdminShell({
           className="flex items-center gap-3 px-2 py-2"
           href="/admin/founder"
         >
-          <Image
-            alt=""
-            className="h-10 w-10 rounded-lg object-contain"
-            height={40}
-            priority
-            src="/logo.png"
-            width={40}
-          />
+          <CatlasLogo className="h-10 w-10" />
           <span className="font-[var(--font-heading)] text-xl font-bold">
             Catlas
           </span>

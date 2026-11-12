@@ -12,13 +12,13 @@ A navigation platform for higher institutions in Nigeria. Students and visitors 
 - **Off-trail help.** If you leave the route, the app says it is readjusting and draws a new one.
 - **Works through network drops.** Catlas's own data for a searched location is saved on the device, so GPS guidance to it keeps working. Google map tiles are not cached.
 - **Inside buildings.** Offices and rooms are mapped by hand, first as a directory (building, floor, rooms), later as floor plans if schools provide them.
-- **Class updates and assignments.** Class governors post class time and venue(which will have the map direction pinned to the class details), and where and when to submit assignments. Students see only what matches their department and level and students are also notified of class updates in-app and by email. 
+- **Class updates and assignments.** Class governors post class time and venue(which will have the map direction pinned to the class details), and where and when to submit assignments. Students see only what matches their department and level and students are also notified of class updates in-app and by email.
 - **Next class button.** The homepage shows your next class with a button that opens the map to its venue.
 - **Class changes.** Governors mark classes cancelled or moved, and students are notified in-app and by email.
 - **Announcements and events.** Posted by committees, HODs, Deans and the School Admin for their own scope.
 - **Report a problem and feedback.** Flag a wrong location, photo or office detail, or an app bug. Send feedback to your school.
 - **Low data mode.** Small images, no animations and the map loads on tap, for slow connections.
-- **Catlas AI assistant.** Answers questions, teaches new users how to use the site, and knows what Catlas is.
+- **Catlas AI assistant.** Catline is intended as a general-purpose AI assistant that can answer everyday questions as well as questions about Catlas and campus navigation. Users can choose an available model, with automatic provider fallback when the selected automatic mode encounters a quota, rate limit, or outage. Provider integrations are planned; see `docs/CATLINE-AI.md`.
 - **Cat messages.** A crying cat for errors, a happy cat for arrival, account created and email verified, and a cat on the 404 and empty screens.
 - **Extras:** bookmarks ("most bookmarked" ranking), in-app and email notifications, dark mode.
 
@@ -52,9 +52,9 @@ Every user picks their **school** at login and lands in that school's own space.
 - **Login:** school selection, JAMB Reg. No or matric number and password, a Continue as guest button, email verification, password reset, admin entry
 - **App pages:** a shared Catlas logo header with a time-of-day greeting and the signed-in user's surname, notifications and an Account profile button; a shared footer with Home, Search, Classroom, Settings and Catline
 - **Homepage:** Near me, Central Library, Labs by faculty and Saved shortcuts; Events and Announcements sections. Near me searches nearby campus buildings from the user's device location.
-- **Catline:** an AI assistant page opened from the final paw-print footer icon; Gemini API connection will be added later
+- **Catline:** a general-purpose AI chat assistant with Catlas knowledge, model selection, automatic provider fallback, and a user-controlled memory area in the conversation sidebar. Provider, persistent conversation, and memory integrations are planned.
 - **Search:** category filter chips (most bookmarked, mini mart, and so on), in the style of Spotify's search page
-- **Classroom:** classe details and assignments for the user's department and level
+- **Classroom:** class details and assignments for the user's department and level
 - **Settings:** Account (photo, surname and first name, school, department, delete account), Feedback (to the founder dashboard), privacy policy, terms of service, low data mode, Log out. Catlas does not use usernames.
 - **Founder admin:** Supabase Auth sign-in and a dashboard for reviewing waitlist entries.
 
@@ -81,7 +81,7 @@ The founder adds faculties and departments during the demo; later deans do it. M
 | Auth | Auth.js with Express as the identity source; Supabase Auth for founder dashboard sign-in |
 | Email | Resend |
 | Images | Cloudinary |
-| AI assistant | Gemini API, free tier to start (graduation advice, customer service, onboarding) |
+| AI assistant | Multiple AI model APIs for Catline and the Gemini API for graduation advice; available free tiers depend on each provider's terms and quotas |
 | Maps and routing | Google Maps (2D only) |
 | Package manager | pnpm |
 | Quality | ESLint with Stylistic rules (formats code), Prettier (non-code files), Conventional Commits |
@@ -230,6 +230,7 @@ The product logo is `Four columns.png` at the repository root. The website uses 
 - `docs/API.md`: API conventions and endpoint plan
 - `docs/DEVSECOPS.md`: CI, security checks and hardening
 - `docs/GLOSSARY.md`: terms used in the project
+- `docs/CATLINE-AI.md`: Catline's general-purpose assistant, provider selection, fallback and memory plan
 - `SECURITY.md`: how to report a vulnerability
 - `CONTRIBUTING.md`: how to contribute
 - `CHANGELOG.md`: what changed and when

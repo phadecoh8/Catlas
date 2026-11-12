@@ -31,13 +31,13 @@ type Conversation = {
 };
 
 const models = [
-  { id: "auto", label: "Catlas Auto", detail: "Automatic fallback" },
-  { id: "gemini", label: "Gemini", detail: "Free tier varies" },
-  { id: "groq", label: "Groq", detail: "Free tier varies" },
-  { id: "mistral", label: "Mistral", detail: "Free tier varies" },
-  { id: "openrouter", label: "OpenRouter", detail: "Free models vary" },
-  { id: "github-models", label: "GitHub Models", detail: "Model access varies" },
-  { id: "deepseek", label: "DeepSeek", detail: "API access may be paid" },
+  { id: "auto", label: "Auto", detail: "Recommended for most questions" },
+  { id: "gemini", label: "Gemini", detail: "Google AI model" },
+  { id: "groq", label: "Groq", detail: "Fast model options" },
+  { id: "mistral", label: "Mistral", detail: "Mistral AI model" },
+  { id: "openrouter", label: "OpenRouter", detail: "Multiple model options" },
+  { id: "github-models", label: "GitHub Models", detail: "GitHub-hosted models" },
+  { id: "deepseek", label: "DeepSeek", detail: "DeepSeek model" },
 ];
 
 export function CatlineChat() {
@@ -70,10 +70,7 @@ export function CatlineChat() {
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = draft.trim();
-
-    if (!text) {
-      return;
-    }
+    if (!text) return;
 
     const userMessage: ChatMessage = {
       id: nextId.current++,
@@ -90,7 +87,6 @@ export function CatlineChat() {
 
     setConversations((current) => {
       const existing = current.find((item) => item.id === conversationId);
-
       if (existing) {
         return current.map((item) =>
           item.id === conversationId
@@ -100,11 +96,7 @@ export function CatlineChat() {
       }
 
       return [
-        {
-          id: conversationId,
-          title: text.slice(0, 40),
-          messages: updatedMessages,
-        },
+        { id: conversationId, title: text.slice(0, 40), messages: updatedMessages },
         ...current,
       ];
     });
@@ -123,25 +115,23 @@ export function CatlineChat() {
     <section aria-label="Catline AI assistant" className={styles.workspace}>
       {sidebarOpen && (
         <button
-          aria-label="Close conversation menu"
+          aria-label="Close sidebar"
           className={styles.mobileScrim}
           onClick={() => setSidebarOpen(false)}
           type="button"
         />
       )}
       <aside
-        aria-label="Conversation history and memory"
+        aria-label="Catline sidebar"
         className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}
       >
         <div className={styles.sidebarTop}>
           <a aria-label="Catlas home" className={styles.wordmark} href="/home">
-            <span className={styles.logoBadge}>
-              <Cat aria-hidden="true" />
-            </span>
+            <span className={styles.logoBadge}><Cat aria-hidden="true" /></span>
             <span>Catline</span>
           </a>
           <button
-            aria-label="Close conversation menu"
+            aria-label="Close sidebar"
             className={`${styles.iconButton} ${styles.mobileClose}`}
             onClick={() => setSidebarOpen(false)}
             type="button"
@@ -158,13 +148,33 @@ export function CatlineChat() {
             <Plus aria-hidden="true" />
           </button>
         </div>
+
         <button className={styles.newChatButton} onClick={startNewChat} type="button">
           <Plus aria-hidden="true" />
           <span>New chat</span>
         </button>
+
         <div className={styles.sidebarSections}>
+          <section aria-labelledby="catline-model-heading" className={styles.modelSection}>
+            <h2 className={styles.sectionLabel} id="catline-model-heading">Model</h2>
+            <label className={styles.modelPicker}>
+              <span className={styles.srOnly}>Choose an AI model</span>
+              <select
+                aria-label="Choose an AI model"
+                onChange={(event) => setModel(event.target.value)}
+                value={model}
+              >
+                {models.map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </select>
+              <ChevronDown aria-hidden="true" />
+            </label>
+            <p className={styles.modelDetail}>{selectedModel.detail}. Provider connections are not active yet.</p>
+          </section>
+
           <section aria-labelledby="catline-recent-heading" className={styles.history}>
-            <h2 className={styles.historyLabel} id="catline-recent-heading">Recent</h2>
+            <h2 className={styles.sectionLabel} id="catline-recent-heading">Recent</h2>
             {conversations.length === 0 ? (
               <p className={styles.historyEmpty}>Your conversations will appear here.</p>
             ) : (
@@ -182,10 +192,10 @@ export function CatlineChat() {
               ))
             )}
           </section>
+
           <section aria-labelledby="catline-memory-heading" className={styles.memorySection}>
-            <h2 className={styles.historyLabel} id="catline-memory-heading">
-              <Brain aria-hidden="true" />
-              Memory
+            <h2 className={styles.sectionLabel} id="catline-memory-heading">
+              <Brain aria-hidden="true" /> Memory
             </h2>
             <p className={styles.memoryEmpty}>
               Details you choose to save will appear here. Memory is not connected yet.
@@ -201,55 +211,45 @@ export function CatlineChat() {
       <div className={styles.chatPanel}>
         <header className={styles.toolbar}>
           <button
-            aria-label="Open conversation menu"
+            aria-label="Open sidebar"
             className={`${styles.iconButton} ${styles.mobileMenu}`}
             onClick={() => setSidebarOpen(true)}
             type="button"
           >
             <Menu aria-hidden="true" />
           </button>
-          <div className={styles.mobileTitle}>
-            <span className={styles.logoBadgeSmall}>
-              <Cat aria-hidden="true" />
-            </span>
-            <span>Catline</span>
-          </div>
-          <label className={styles.modelPicker}>
-            <span className={styles.srOnly}>Choose an AI model</span>
-            <select
-              aria-label="Choose an AI model"
-              onChange={(event) => setModel(event.target.value)}
-              value={model}
-            >
-              {models.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label} · {item.detail}
-                </option>
-              ))}
-            </select>
-            <ChevronDown aria-hidden="true" />
-          </label>
-          <span className={styles.toolbarNote}>AI assistant</span>
+          <button
+            aria-label="Start a new chat"
+            className={`${styles.iconButton} ${styles.mobileNewChat}`}
+            onClick={startNewChat}
+            type="button"
+          >
+            <Plus aria-hidden="true" />
+          </button>
+          <h1 className={styles.chatTitle}>
+            {activeConversation?.title || "New chat"}
+          </h1>
+          <span className={styles.toolbarNote}>Catline assistant</span>
         </header>
 
         <div className={styles.conversation}>
           {messages.length === 0 ? (
-            <div aria-label="New conversation" className={styles.emptyState} />
+            <div className={styles.emptyState}>
+              <span className={styles.emptyLogo}><Cat aria-hidden="true" /></span>
+              <h2>How can I help?</h2>
+              <p>Ask about finding your way around campus.</p>
+            </div>
           ) : (
             <div aria-live="polite" className={styles.messages} role="log">
               {messages.map((message) => (
                 <article className={styles.messageRow} key={message.id}>
                   {message.role === "assistant" ? (
-                    <span aria-label="Catline" className={styles.messageAvatar}>
-                      <Cat aria-hidden="true" />
-                    </span>
+                    <span aria-label="Catline" className={styles.messageAvatar}><Cat aria-hidden="true" /></span>
                   ) : (
                     <span aria-hidden="true" className={styles.userAvatar}>You</span>
                   )}
                   <div className={styles.messageContent}>
-                    <p className={styles.messageAuthor}>
-                      {message.role === "assistant" ? "Catline" : "You"}
-                    </p>
+                    <p className={styles.messageAuthor}>{message.role === "assistant" ? "Catline" : "You"}</p>
                     <p className={styles.messageText}>{message.text}</p>
                   </div>
                 </article>
@@ -260,15 +260,13 @@ export function CatlineChat() {
 
         <div className={styles.composerArea}>
           <form className={styles.composer} onSubmit={sendMessage}>
-            <label className={styles.srOnly} htmlFor="catline-message">
-              Message Catline
-            </label>
+            <label className={styles.srOnly} htmlFor="catline-message">Message Catline</label>
             <textarea
               id="catline-message"
               maxLength={2000}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about Catlas..."
+              placeholder="Ask anything or type a message..."
               ref={textareaRef}
               rows={1}
               value={draft}
@@ -285,12 +283,7 @@ export function CatlineChat() {
               </button>
             </div>
           </form>
-          <p className={styles.disclaimer}>
-            Catline can make mistakes. Don’t include personal or account details.
-          </p>
-          <p className={styles.modelStatus}>
-            {selectedModel.label} selected. Provider connections and memory are not active yet.
-          </p>
+          <p className={styles.disclaimer}>Catline is getting ready. Don’t include personal or account details.</p>
         </div>
       </div>
     </section>

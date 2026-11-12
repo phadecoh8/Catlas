@@ -334,7 +334,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
-    async signOut({ token }) {
+    async signOut(message) {
+      if (!("token" in message)) return;
+      const { token } = message;
+
       if (typeof token?.refreshToken !== "string") return;
 
       if (token.authProvider === "admin") {

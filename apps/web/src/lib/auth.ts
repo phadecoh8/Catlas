@@ -31,6 +31,16 @@ type ApiLoginResponse = {
   };
 };
 
+type AuthProvider = "admin" | "student";
+
+type SessionUser = {
+  id?: string;
+  role?: string;
+  mustChangePassword?: boolean;
+  email?: string | null;
+  name?: string | null;
+};
+
 const dashboardByRole: Record<string, string> = {
   founder: "/admin/founder",
   vc: "/admin/vc",
@@ -91,7 +101,7 @@ async function authorizeAdmin(
       role,
       accessToken,
       refreshToken,
-      provider: "admin",
+      provider: "admin" as const,
       accessTokenExpires: Date.now() + 15 * 60 * 1000,
       mustChangePassword,
       redirectTo: mustChangePassword ? "/change-password" : rolePath,
@@ -249,7 +259,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role,
             accessToken: result.access_token,
             refreshToken: result.refresh_token,
-            provider: "student",
+            provider: "student" as const,
             accessTokenExpires: Date.now() + (result.expires_in ?? 3600) * 1000,
             mustChangePassword: false,
             redirectTo,
@@ -275,7 +285,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.refreshToken = user.refreshToken;
         token.accessTokenExpires = user.accessTokenExpires;
         token.redirectTo = user.redirectTo;
-        token.authProvider = user.provider;
+        token.authProvider = user.provider as AuthProvider;
         token.mustChangePassword = user.mustChangePassword;
       }
 
@@ -304,14 +314,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       token.accessToken = accessToken;
       token.refreshToken = refreshToken;
       token.accessTokenExpires =
-        Date.now() + (refreshed.expires_in ?? 3600) * 1000;
+        Date.now() + (refreshed?.expires_in ?? 3600) * 1000;
       delete token.sessionError;
       return token;
     },
     session({ session, token }) {
-      session.user.id = token.sub ?? "";
-      session.user.role = typeof token.role === "string" ? token.role : "";
-      session.user.mustChangePassword = token.mustChangePassword === true;
+      const user = session.user as SessionUser;
+      user.id = token.sub ?? "";
+      user.role = typeof token.role === "string" ? token.role : "";
+      user.mustChangePassword = token.mustChangePassword === true;
       session.error = typeof token.sessionError === "string"
         ? token.sessionError
         : undefined;

@@ -1,21 +1,10 @@
-import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { auth } from "@/lib/auth";
 
-export default async function AppLayout({
+export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
-  if (!session?.user.id || session.error) {
-    redirect("/login");
-  }
-
-  if (session.user.role !== "student") {
-    redirect(session.redirectTo || "/login");
-  }
-
+  // TEMP: allow direct UI preview without login while designing and testing routes.
   return <AppShell>{children}</AppShell>;
 }

@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   House,
+  Map,
   PawPrint,
   Presentation,
   Search,
-  Settings,
 } from "lucide-react";
 
 const tabs = [
   { label: "Home", href: "/home", Icon: House },
   { label: "Search", href: "/search", Icon: Search },
   { label: "Classroom", href: "/classroom", Icon: Presentation },
-  { label: "Settings", href: "/settings", Icon: Settings },
+  { label: "Map", href: "/map", Icon: Map },
   { label: "Catline", href: "/catline", Icon: PawPrint },
 ];
 
@@ -23,7 +23,11 @@ function getActiveHref(pathname: string) {
     return "/settings";
   }
 
-  if (pathname.startsWith("/location") || pathname.startsWith("/navigate")) {
+  if (pathname.startsWith("/map") || pathname.startsWith("/navigate")) {
+    return "/map";
+  }
+
+  if (pathname.startsWith("/location")) {
     return "/search";
   }
 

@@ -13,7 +13,7 @@ Every dashboard role has a **personal login** (no shared school password).
 | Dean (one per faculty) | The owner | Email and password | Dean dashboard |
 | HOD and department committee | The owner | Email and password | Department dashboard |
 | Class governor | The owner | Email and password | Governor dashboard |
-| Student | Self sign-up | JAMB Reg. No or matric number, and password | Student app |
+| Student | Self sign-up | Email and password | Student app |
 | Visitor | No account | "Continue as guest" button | Demo page |
 
 The **Staff** role is planned for a future version (see Future versions).
@@ -27,15 +27,14 @@ The **Staff** role is planned for a future version (see Future versions).
 - Guest endpoints are rate limited.
 
 **Students**
-- Fresher: logs in with JAMB Reg. No, green "not fully verified" badge until a matric number is added.
-- Returning student: logs in with matric number, blue "fully verified" badge.
-- At sign-up the user gives surname, first name, phone number, department, level and email. Catlas does not use usernames.
+- Students sign in with their verified email address and password. JAMB and matric numbers identify enrollment; they are not login names.
+- At sign-up the user gives surname, first name, phone number, school, faculty, department, level, email and password. JAMB Reg. No is optional for freshers. Catlas does not use usernames.
 - Before the account is created, show a consent line that links to the privacy policy and terms of service, as data protection law requires.
 - **Level is self-declared.** If a student's level is wrong, they send feedback and it reaches the founder dashboard, where the owner corrects it.
 - **Verification now:** the owner verifies numbers manually while testing. Build a `VerificationRecord` table an admin can fill by hand.
 - **Verification later:** a school can send a list of valid numbers (CSV) to upload. If an official API is found, it replaces the upload. Keep this behind a `verification` service so the source can be swapped.
 
-**Email (Resend)** covers email verification for every new user, password reset, and notices (announcements, class changes and assignment reminders).
+**Supabase Auth** verifies student email addresses and manages their passwords and refresh sessions. Resend covers notices (announcements, class changes and assignment reminders).
 
 **Notifications** go both in-app and by email. Keep email volume sensible (batch or digest where possible).
 
@@ -47,18 +46,14 @@ The **Staff** role is planned for a future version (see Future versions).
 
 **Login and session flow (decided)**
 
-Express owns users, passwords, roles, 2FA and sessions. Auth.js in Next.js is only the frontend session layer.
+Supabase Auth owns student passwords, email verification and refresh sessions. The `profiles` table stores each student's role and campus scope. Auth.js encrypts the Supabase tokens in an httpOnly frontend session cookie. Dashboard accounts continue to authenticate through Express and use its role, 2FA and refresh-token rules.
 
-1. The user picks a school, then enters their JAMB Reg. No or matric number and a password. Visitors do not log in; they use the separate **Continue as guest** button. Dashboard roles use email and password on the shared admin login page.
-2. Auth.js (Credentials provider) sends the details to `POST /auth/login` on Express.
-3. Express checks the password hash, account status, email verification and school, then returns a short-lived access token (about 15 minutes, a signed JWT using `JWT_ACCESS_SECRET`) and a long-lived refresh token (stored hashed in the database and rotated on every use).
-4. If the role needs 2FA, Express first returns a "2FA required" step and issues tokens only after the authenticator code (or a backup code) is correct.
-5. Auth.js keeps the tokens in its encrypted, httpOnly session cookie on the frontend domain. Tokens are never exposed to browser JavaScript.
-6. The Next.js server calls Express with the access token. When it expires, Auth.js gets a new pair from `POST /auth/refresh`.
-7. Express middleware verifies the token on every request, reads role, school, faculty, department and level from it, and applies the scope checks. For sensitive actions it re-checks the database, because scopes change (level rollover, role changes).
-8. Logout, password change, account deactivation or a security event revokes the refresh tokens in the database.
-9. An account with `must_change_password` can only reach the change-password endpoint until a new password is set.
-10. Email verification and password reset use single-use, expiring tokens (stored hashed), sent through Resend, with rate limits and no hint about whether an email exists.
+1. A student signs up with email, password and their school, faculty, department and level. Visitors use **Continue as guest** and do not create accounts. Dashboard roles use email and password on the shared admin login page.
+2. The Next.js signup route sends validated details to Supabase Auth. A database trigger creates a student profile with the `student` role; user metadata cannot assign an admin role.
+3. Supabase sends the email verification link. A student must verify the email before password sign-in succeeds.
+4. Auth.js authenticates students with Supabase Auth and keeps its access and refresh tokens in an encrypted, httpOnly cookie. Tokens are not exposed to browser JavaScript.
+5. Auth.js refreshes expired student access tokens server-side and revokes the Supabase session at logout. Row-level security limits profile reads to the signed-in user.
+6. Admin sign-in continues through Express, including its 2FA flow and role-specific dashboard. Admin access and refresh tokens remain in the Auth.js cookie.
 
 Two secrets, never shared: `AUTH_SECRET` (frontend, encrypts the Auth.js cookie) and `JWT_ACCESS_SECRET` (backend, signs access tokens).
 
@@ -118,7 +113,7 @@ The landing page is built before the app and lives at `/`. The owner provides th
 **Waitlist**
 - There is no waitlist page. The header button opens a form where people leave their details. The form collects **name, school, faculty, department, level and email**, and a required consent checkbox that links to the privacy policy.
 - Spam protection without a third-party captcha: a hidden honeypot field, a minimum fill time, and rate limiting.
-- The details are saved in a **separate Supabase project**, so those people can be signed in easily when the product is ready.
+- The waitlist and student authentication use the configured Supabase project. Student passwords are managed by Supabase Auth; waitlist entries remain separate from student profiles.
 - If someone who has already registered submits the form again, tell them they have already registered.
 - At launch the owner turns waitlist entries into accounts. The agent helps the owner plan how when the time comes.
 

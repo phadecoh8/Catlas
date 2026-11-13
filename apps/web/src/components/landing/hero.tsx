@@ -6,7 +6,7 @@ import {
 import Link from "next/link";
 import { HeroCountdown } from "@/components/landing/hero-countdown";
 import { ScrollLink } from "@/components/landing/scroll-link";
-import { HeroAnimation } from "@/components/landing/hero-animation";
+import { Hero3DAnimation } from "@/components/landing/hero-3d-animation";
 
 export function Hero() {
   return (
@@ -52,7 +52,7 @@ export function Hero() {
         </div>
       </div>
 
-      <HeroAnimation />
+      <Hero3DAnimation />
 
       <ScrollLink
         aria-label="Scroll to route demo"

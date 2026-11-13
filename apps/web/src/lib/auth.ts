@@ -91,7 +91,7 @@ async function authorizeAdmin(
       role,
       accessToken,
       refreshToken,
-      provider: "admin",
+      provider: "admin" as const,
       accessTokenExpires: Date.now() + 15 * 60 * 1000,
       mustChangePassword,
       redirectTo: mustChangePassword ? "/change-password" : rolePath,
@@ -304,7 +304,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       token.accessToken = accessToken;
       token.refreshToken = refreshToken;
       token.accessTokenExpires =
-        Date.now() + (refreshed.expires_in ?? 3600) * 1000;
+        Date.now() + (refreshed?.expires_in ?? 3600) * 1000;
       delete token.sessionError;
       return token;
     },
@@ -323,7 +323,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
-    async signOut({ token }) {
+    async signOut(message) {
+      const token = "token" in message ? message.token : null;
+
       if (typeof token?.refreshToken !== "string") return;
 
       if (token.authProvider === "admin") {

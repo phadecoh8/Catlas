@@ -1,6 +1,22 @@
 # Landing Hero Animation (Catlas)
 
-A looping SVG story for the landing page, about 19 seconds. A thick stick figure searches for a place on a phone, follows the trail, walks to the building, feels the phone vibrate on arrival, and sees the happy cat congratulate them. Then the figure steps to the side and gives a thumbs up while the Catlas name and description pop up. Then it loops. The app was called CNS before; the animation uses the name Catlas.
+## Implementation update
+
+The landing hero uses only a lazy-loaded Three.js scene, using the Three.js
+dependency already in the web app. It translates the main storyboard beats
+into 3D with a phone, route, walking figure, campus building, arrival card and
+mascot. It has no 2D animation fallback. Reduced-motion and low-data
+preferences show a still end scene; the 3D scene pauses outside the viewport.
+
+Three.js is used here because the landing hero is rendered in 3D. No animation
+dependency was added.
+
+A looping 3D campus-navigation story for the landing page, about 19 seconds.
+A thick stick figure searches for a place on a phone, follows the trail, walks
+to the building, feels the phone vibrate on arrival, and sees the happy cat
+congratulate them. Then the figure steps to the side and gives a thumbs up
+while the Catlas name and description pop up. Then it loops. The app was
+called CNS before; the animation uses the name Catlas.
 
 ## Library choice
 

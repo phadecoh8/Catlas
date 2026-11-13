@@ -1,3 +1,4 @@
+-- Run this script in the Supabase SQL Editor for the Catlas project.
 create extension if not exists pgcrypto;
 
 create table if not exists public.waitlist_signups (
@@ -61,6 +62,42 @@ create table if not exists public.departments (
 
 create unique index if not exists departments_faculty_name_unique
   on public.departments (faculty_id, lower(name));
+
+-- Seed the demo school and pilot faculties from README.md.
+insert into public.schools (name)
+values ('Federal University of Oye, Ikole Campus')
+on conflict (lower(name)) do nothing;
+
+insert into public.faculties (school_id, name)
+select school.id, faculty.name
+from public.schools as school
+cross join (
+  values
+    ('Faculty of Engineering'),
+    ('Faculty of CIESA')
+) as faculty(name)
+where lower(school.name) = lower(
+  'Federal University of Oye, Ikole Campus'
+)
+on conflict (school_id, lower(name)) do nothing;
+
+insert into public.departments (school_id, faculty_id, name)
+select school.id, faculty.id, department.name
+from public.schools as school
+join public.faculties as faculty
+  on faculty.school_id = school.id
+cross join (
+  values
+    ('Faculty of Engineering', 'Mechanical Engineering'),
+    ('Faculty of Engineering', 'Material Engineering'),
+    ('Faculty of CIESA', 'Mechatronics Engineering'),
+    ('Faculty of CIESA', 'Computer Engineering')
+) as department(faculty_name, name)
+where lower(school.name) = lower(
+  'Federal University of Oye, Ikole Campus'
+)
+  and lower(faculty.name) = lower(department.faculty_name)
+on conflict (faculty_id, lower(name)) do nothing;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,

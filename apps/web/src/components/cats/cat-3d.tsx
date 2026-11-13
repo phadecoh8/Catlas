@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { getWebGL2Context } from "@/lib/webgl";
 
 type Cat3DProps = {
   mood: "happy" | "crying" | "searching" | "calm";
@@ -30,12 +31,16 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const context = getWebGL2Context(canvas);
+    if (!context) return;
+
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
         alpha: true,
         antialias: true,
         canvas,
+        context,
         powerPreference: "low-power",
       });
     } catch {
@@ -179,7 +184,6 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
     camera.lookAt(0, 0.02, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const resize = () => {
       const width = Math.max(canvas.clientWidth, 1);

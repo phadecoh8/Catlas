@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {
   Bell,
+  Settings,
   UserRound,
 } from "lucide-react";
 import { connection } from "next/server";
 import { CatlasLogo } from "@/components/layout/logo";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { auth } from "@/lib/auth";
 
 function getGreeting() {
@@ -45,7 +45,9 @@ export async function AppHeader() {
         <span className="app-greeting">
           {greeting}, {surname}
         </span>
-        <ThemeToggle />
+        <Link aria-label="Settings" href="/settings">
+          <Settings aria-hidden="true" />
+        </Link>
         <Link aria-label="Notifications" href="/notifications">
           <Bell aria-hidden="true" />
         </Link>

@@ -31,9 +31,9 @@ The browser also loads the Google Maps script directly (browser key, restricted 
 
 - **Frontend (Next.js):** landing page, pages for students and guests, and the dashboards. Holds the Auth.js session. Calls the API from the server side so tokens never reach browser JavaScript.
 - **Landing page:** the public page at `/`, built first. Its waitlist form submits through a Next.js route handler to a separate Supabase project.
-- **API (Express):** owns users, passwords, roles, 2FA, sessions, scope checks and all business rules. Organised as modules, each with routes, controller, service and schema.
+- **API (Express):** owns admin credentials, roles, 2FA and refresh sessions, plus app business rules and scope checks. Student credentials and email verification are managed by Supabase Auth. Organised as modules, each with routes, controller, service and schema.
 - **Database (PostgreSQL):** one database for all schools; every school-scoped row carries `school_id`. `pg_trgm` powers fuzzy search.
-- **Supabase:** stores waitlist sign-ups in a separate project. Admin identity, passwords, roles and sessions belong to Express and Auth.js; the founder signs in through the same admin login as the other roles. Next.js reads waitlist entries with server-side `fetch` and a server-only Supabase secret key. Legacy anon and service-role keys are supported as fallbacks.
+- **Supabase:** provides student authentication and stores student profiles, school enrollment options and waitlist entries. The profile trigger always assigns the student role; row-level security limits profile reads and updates. Auth.js stores student tokens in an encrypted httpOnly cookie. Next.js reads waitlist entries with server-side `fetch` and a server-only Supabase secret key. Legacy anon and service-role keys are supported as fallbacks.
 - **Jobs:** level rollover, session lock, graduation recommendation, reminders, retention cleanup. All are safe to run twice.
 - **Images:** stored on Cloudinary. The database keeps the `public_id` and URL.
 - **Catlas AI assistant:** answers from the knowledge files in `apps/api/src/modules/assistant/knowledge/`. It never sees personal data and cannot perform actions.
@@ -59,7 +59,7 @@ One deployment serves many schools. Isolation is enforced in the API, not by sep
 
 ## Login and sessions
 
-Summarised from `docs/PRODUCT.md` (Login and session flow): Express authenticates and issues a 15-minute access token plus a rotating refresh token. Auth.js stores both in an encrypted httpOnly cookie. The Next.js server attaches the access token to API calls. Logout, password change or deactivation revokes the refresh tokens. Visitors do not log in; the Continue as guest button opens a demo page that uses public, rate-limited guest endpoints.
+Summarised from `docs/PRODUCT.md` (Login and session flow): Supabase Auth verifies student email and password and rotates student refresh tokens. Express authenticates admin accounts and applies their role and 2FA rules. Auth.js stores either provider's tokens in an encrypted httpOnly cookie. Student routes require a student session; visitors do not log in and use public, rate-limited guest endpoints.
 
 ## Academic session lifecycle
 

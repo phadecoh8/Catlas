@@ -24,7 +24,7 @@ Catlas helps students and visitors at Nigerian higher institutions navigate thei
 
 Owner and founder: Fadero Joshua (phadecoh). Long-term scale target: 300,000+ users across many schools. The demo expects fewer than 2,000 users. Schools will later be billed per registered user (billing is out of scope for now).
 
-**Current phase:** build the landing page first (see `docs/LANDING-PAGE-PLAN.md`), then the app, using the owner's department as the demo school.
+**Current phase:** build the landing page first (see `docs/LANDING-PAGE-PLAN.md`), then the app. The demo school is Federal University of Oye, Ikole Campus. The pilot faculties are Faculty of Engineering and Faculty of CIESA, with departments listed in `README.md`.
 
 ## 2. Hard rules
 
@@ -49,7 +49,7 @@ Owner and founder: Fadero Joshua (phadecoh). Long-term scale target: 300,000+ us
 15. **Do not invent building data.** The owner supplies building names, photos and information.
 16. Keep changes small and focused. Explain what you changed and why.
 17. Catlas does not use usernames. Do not add username fields to sign-up, login, account details, or user records.
-18. Admin dashboard previews may bypass login only in local development. Never enable the preview bypass in production or use it to access real data.
+18. Admin dashboard previews may bypass login only in local development. Student app routes also allow a local development preview before auth and database setup. Never enable a preview bypass in production or use it to access real data.
 
 ## 3. Approved stack
 
@@ -152,7 +152,7 @@ Do not decide open decisions on your own. Everything else is decided in the docs
 **Open decisions:** none at the moment. New ones are added here.
 
 **Owner inputs still needed** (do not invent these):
-- Name of the demo school, and which of the four departments is the owner's own
+- Confirmation of which of the four pilot departments is the owner's own
 - Building names, photos and information for the demo
 - Logo: supplied. `Four columns.png` at the repository root is the product logo, copied to `apps/web/public/logo.png`, and it is the source of the favicon and app icons. Do not generate another logo.
 - Hero photo. The cat animations now live in `apps/web/src/components/cats/` instead of SVG files; only the calm waiting cat is still a stub

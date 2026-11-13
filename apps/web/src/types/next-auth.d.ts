@@ -7,6 +7,8 @@ declare module "next-auth" {
     user: DefaultSession["user"] & {
       id: string;
       role?: string;
+      provider?: "student" | "admin";
+      mfaVerified?: boolean;
       mustChangePassword?: boolean;
     };
   }
@@ -17,6 +19,7 @@ declare module "next-auth" {
     refreshToken: string;
     accessTokenExpires: number;
     provider: "student" | "admin";
+    mfaVerified: boolean;
     mustChangePassword: boolean;
     redirectTo: string;
   }
@@ -32,5 +35,6 @@ declare module "next-auth/jwt" {
     redirectTo?: string;
     sessionError?: string;
     authProvider?: "student" | "admin";
+    mfaVerified?: boolean;
   }
 }

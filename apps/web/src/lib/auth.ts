@@ -92,6 +92,7 @@ async function authorizeAdmin(
       accessToken,
       refreshToken,
       provider: "admin" as const,
+      mfaVerified: isTwoFactor,
       accessTokenExpires: Date.now() + 15 * 60 * 1000,
       mustChangePassword,
       redirectTo: mustChangePassword ? "/change-password" : rolePath,
@@ -249,7 +250,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role,
             accessToken: result.access_token,
             refreshToken: result.refresh_token,
-            provider: "student",
+            provider: "student" as const,
+            mfaVerified: false,
             accessTokenExpires: Date.now() + (result.expires_in ?? 3600) * 1000,
             mustChangePassword: false,
             redirectTo,
@@ -277,6 +279,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.redirectTo = user.redirectTo;
         token.authProvider = user.provider;
         token.mustChangePassword = user.mustChangePassword;
+        token.mfaVerified = user.mfaVerified;
       }
 
       if (
@@ -311,6 +314,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, token }) {
       session.user.id = token.sub ?? "";
       session.user.role = typeof token.role === "string" ? token.role : "";
+      session.user.provider = token.authProvider;
+      session.user.mfaVerified = token.mfaVerified === true;
       session.user.mustChangePassword = token.mustChangePassword === true;
       session.error = typeof token.sessionError === "string"
         ? token.sessionError

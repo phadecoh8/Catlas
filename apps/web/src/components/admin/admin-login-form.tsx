@@ -3,6 +3,7 @@
 import { getSession, signIn } from "next-auth/react";
 import { useState, type FormEvent } from "react";
 import { CatlasLogo } from "@/components/layout/logo";
+import { recordImportantActivity } from "@/lib/site-activity";
 
 type LoginResult = {
   message?: string;
@@ -39,10 +40,7 @@ export function AdminLoginForm() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
+          body: JSON.stringify({ email, password }),
         });
         const challengeResult =
           (await challengeResponse.json()) as LoginResult;
@@ -63,10 +61,7 @@ export function AdminLoginForm() {
           return;
         }
 
-        credentials = {
-          email,
-          password,
-        };
+        credentials = { email, password };
       }
 
       const result = await signIn("credentials", {
@@ -80,6 +75,11 @@ export function AdminLoginForm() {
       }
 
       const session = await getSession();
+      const role = session?.user?.role;
+      recordImportantActivity(
+        "AUTH",
+        role ? `Admin sign-in succeeded · role=${role}` : "Admin sign-in succeeded",
+      );
 
       if (session?.redirectTo) {
         window.location.assign(session.redirectTo);

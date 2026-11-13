@@ -1,4 +1,9 @@
-export type SiteActivityType = "PAGE_VIEW" | "CLICK" | "FORM_SUBMIT";
+export type SiteActivityType =
+  | "AUTH"
+  | "AI"
+  | "ENROLLMENT"
+  | "ADMIN_ACTION"
+  | "SYSTEM";
 
 export type SiteActivity = {
   id: string;
@@ -8,9 +13,20 @@ export type SiteActivity = {
   detail: string;
 };
 
-const STORAGE_KEY = "catlas-site-activity-v1";
+const STORAGE_KEY = "catlas-important-activity-v2";
 const ACTIVITY_EVENT = "catlas:site-activity";
 const MAX_ENTRIES = 300;
+const MAX_DETAIL_LENGTH = 180;
+
+function isSiteActivityType(value: unknown): value is SiteActivityType {
+  return (
+    value === "AUTH" ||
+    value === "AI" ||
+    value === "ENROLLMENT" ||
+    value === "ADMIN_ACTION" ||
+    value === "SYSTEM"
+  );
+}
 
 function readActivity(): SiteActivity[] {
   try {
@@ -18,12 +34,13 @@ function readActivity(): SiteActivity[] {
     if (!stored) return [];
     const parsed: unknown = JSON.parse(stored);
     if (!Array.isArray(parsed)) return [];
+
     return parsed.filter(
       (entry): entry is SiteActivity =>
         typeof entry === "object" &&
         entry !== null &&
         typeof entry.id === "string" &&
-        typeof entry.type === "string" &&
+        isSiteActivityType(entry.type) &&
         typeof entry.timestamp === "string" &&
         typeof entry.route === "string" &&
         typeof entry.detail === "string",
@@ -37,20 +54,29 @@ export function getSiteActivity() {
   return readActivity();
 }
 
-export function recordSiteActivity(
-  entry: Omit<SiteActivity, "id" | "timestamp">,
+/**
+ * Record a meaningful product or administration event, not routine browsing.
+ * Callers must never include names, email addresses, credentials, or other
+ * personal data in the detail string.
+ */
+export function recordImportantActivity(
+  type: SiteActivityType,
+  detail: string,
+  route = typeof window === "undefined" ? "/" : window.location.pathname,
 ) {
   try {
     const activity: SiteActivity = {
-      ...entry,
       id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+      type,
       timestamp: new Date().toISOString(),
+      route: route.slice(0, 120),
+      detail: detail.replace(/[\r\n\t]+/g, " ").trim().slice(0, MAX_DETAIL_LENGTH),
     };
     const next = [activity, ...readActivity()].slice(0, MAX_ENTRIES);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     window.dispatchEvent(new Event(ACTIVITY_EVENT));
   } catch {
-    // Activity tracking should never interfere with normal site interactions.
+    // Audit display failures must never interrupt the application action.
   }
 }
 

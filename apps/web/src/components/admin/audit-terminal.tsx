@@ -7,7 +7,6 @@ import {
   ArrowDownRight,
   Download,
   Maximize2,
-  Minimize2,
   Pause,
   Play,
   Trash2,
@@ -22,19 +21,27 @@ import {
 } from "@/lib/site-activity";
 
 type Filter = "ALL" | SiteActivityType;
-type TerminalLine = { id: number; text: string; tone?: "muted" | "error" | "success" };
+type TerminalLine = {
+  id: number;
+  text: string;
+  tone?: "muted" | "error" | "success";
+};
 
 const filters: { label: string; value: Filter }[] = [
-  { label: "all", value: "ALL" },
-  { label: "page views", value: "PAGE_VIEW" },
-  { label: "clicks", value: "CLICK" },
-  { label: "forms", value: "FORM_SUBMIT" },
+  { label: "all events", value: "ALL" },
+  { label: "authentication", value: "AUTH" },
+  { label: "AI service", value: "AI" },
+  { label: "enrollment", value: "ENROLLMENT" },
+  { label: "admin actions", value: "ADMIN_ACTION" },
+  { label: "system", value: "SYSTEM" },
 ];
 
 const typeStyles: Record<SiteActivityType, string> = {
-  PAGE_VIEW: "text-cyan-300",
-  CLICK: "text-emerald-300",
-  FORM_SUBMIT: "text-amber-300",
+  AUTH: "text-cyan-300",
+  AI: "text-violet-300",
+  ENROLLMENT: "text-amber-300",
+  ADMIN_ACTION: "text-emerald-300",
+  SYSTEM: "text-slate-300",
 };
 
 function formatTime(timestamp: string) {
@@ -49,7 +56,6 @@ function formatTime(timestamp: string) {
 export default function AuditLogPage() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const outputRef = useRef<HTMLDivElement>(null);
   const [entries, setEntries] = useState<SiteActivity[]>([]);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [live, setLive] = useState(true);
@@ -58,24 +64,22 @@ export default function AuditLogPage() {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [lines, setLines] = useState<TerminalLine[]>([
-    { id: 1, text: "CATLAS ACTIVITY CONSOLE // secure local session", tone: "success" },
-    { id: 2, text: 'Type "help" to see available commands. Use /q to exit.', tone: "muted" },
+    { id: 1, text: "CATLAS IMPORTANT EVENTS CONSOLE", tone: "success" },
+    { id: 2, text: 'Type "help" for commands. Use /q to exit.', tone: "muted" },
   ]);
   const lineId = useRef(2);
 
   useEffect(() => {
-    const refresh = () => setEntries(getSiteActivity());
-    refresh();
+    const refresh = () => {
+      if (live) setEntries(getSiteActivity());
+    };
+    setEntries(getSiteActivity());
     return subscribeToSiteActivity(refresh);
-  }, []);
+  }, [live]);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    outputRef.current?.scrollTo({ top: 0 });
-  }, [entries, filter]);
 
   const visibleEntries = useMemo(
     () => (filter === "ALL" ? entries : entries.filter((entry) => entry.type === filter)),
@@ -107,7 +111,7 @@ export default function AuditLogPage() {
         leaveTerminal();
         return;
       case "help":
-        appendLine("help · clear · date · pwd · ls · whoami · status · events · filter [all|views|clicks|forms] · zoom [in|out|reset|50-150] · echo <text> · /q", "success");
+        appendLine("help · clear · date · pwd · ls · whoami · status · events · filter [all|auth|ai|enrollment|admin|system] · zoom [in|out|reset|50-150] · echo <text> · /q", "success");
         break;
       case "clear":
         setLines([]);
@@ -119,7 +123,7 @@ export default function AuditLogPage() {
         appendLine(window.location.pathname);
         break;
       case "ls":
-        appendLine("activity.log  filters/  session.status  help.txt");
+        appendLine("important-events.log  filters/  session.status  help.txt");
         break;
       case "whoami":
         appendLine("founder · Catlas activity monitor");
@@ -128,18 +132,19 @@ export default function AuditLogPage() {
         appendLine(`stream=${live ? "live" : "paused"} · events=${entries.length} · filter=${filter.toLowerCase()} · zoom=${zoom}%`);
         break;
       case "events":
-        appendLine(`${visibleEntries.length} event(s) currently visible (${entries.length} captured).`);
+        appendLine(`${visibleEntries.length} important event(s) visible (${entries.length} captured).`);
         break;
       case "filter": {
         const filterMap: Record<string, Filter> = {
           all: "ALL",
-          views: "PAGE_VIEW",
-          "page-views": "PAGE_VIEW",
-          clicks: "CLICK",
-          forms: "FORM_SUBMIT",
+          auth: "AUTH",
+          ai: "AI",
+          enrollment: "ENROLLMENT",
+          admin: "ADMIN_ACTION",
+          system: "SYSTEM",
         };
         const selected = filterMap[argument.toLowerCase()];
-        if (!selected) appendLine("Usage: filter [all|views|clicks|forms]", "error");
+        if (!selected) appendLine("Usage: filter [all|auth|ai|enrollment|admin|system]", "error");
         else {
           setFilter(selected);
           appendLine(`filter set to ${argument.toLowerCase()}`, "success");
@@ -173,7 +178,7 @@ export default function AuditLogPage() {
     const url = URL.createObjectURL(new Blob([contents], { type: "text/plain" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = "catlas-activity.log";
+    link.download = "catlas-important-events.log";
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -205,8 +210,7 @@ export default function AuditLogPage() {
     <main
       aria-label="Catlas audit terminal"
       className="fixed inset-0 z-[100] flex min-h-0 flex-col overflow-hidden bg-[#030806] font-mono text-emerald-100 selection:bg-emerald-400/30"
-      onClick={() => inputRef.current?.focus()}
-      style={{ zoom: `${zoom}%` }}
+      style={{ fontSize: `${zoom}%` }}
     >
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-emerald-400/20 bg-[#07100b] px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
@@ -216,15 +220,22 @@ export default function AuditLogPage() {
             <i className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs font-bold tracking-wider text-emerald-100">CATLAS // ACTIVITY TERMINAL</p>
+            <p className="truncate text-xs font-bold tracking-wider text-emerald-100">CATLAS // IMPORTANT EVENTS</p>
             <p className="text-[10px] text-emerald-100/40">founder@catlas:~</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-2 pr-2 text-[10px] uppercase tracking-widest text-emerald-300/70 sm:flex">
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-amber-300"}`} />
-            {live ? "monitoring" : "paused"}
-          </span>
+          <label className="hidden text-[10px] uppercase tracking-widest text-emerald-100/45 sm:block" htmlFor="feed-status">Feed</label>
+          <select
+            aria-label="Feed status"
+            className="rounded border border-emerald-300/20 bg-[#07100b] px-2 py-1.5 text-[10px] text-emerald-100 outline-none focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-300/20"
+            id="feed-status"
+            onChange={(event) => setLive(event.target.value === "live")}
+            value={live ? "live" : "paused"}
+          >
+            <option className="bg-[#07100b]" value="live">LIVE</option>
+            <option className="bg-[#07100b]" value="paused">PAUSED</option>
+          </select>
           <button aria-label="Zoom out" className="terminal-control" onClick={() => setZoom((value) => Math.max(50, value - 10))} type="button">−</button>
           <span className="min-w-10 text-center text-[10px] text-emerald-100/60">{zoom}%</span>
           <button aria-label="Zoom in" className="terminal-control" onClick={() => setZoom((value) => Math.min(150, value + 10))} type="button">+</button>
@@ -238,13 +249,18 @@ export default function AuditLogPage() {
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-emerald-400/10 px-4 py-2.5 sm:px-6">
             <div className="flex items-center gap-2 text-[10px] text-emerald-100/55">
               <Activity className="h-3.5 w-3.5 text-emerald-300/70" />
-              <span>ACTIVITY STREAM</span>
+              <span>IMPORTANT EVENTS</span>
               <span className="text-emerald-100/25">·</span>
               <span>{entries.length}/300</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <label className="sr-only" htmlFor="audit-filter">Filter events</label>
-              <select id="audit-filter" className="max-w-32 rounded border border-emerald-300/15 bg-[#07100b] px-2 py-1 text-[10px] text-emerald-100/75 outline-none" onChange={(event) => setFilter(event.target.value as Filter)} value={filter}>
+              <label className="sr-only" htmlFor="audit-filter">Filter event type</label>
+              <select
+                className="max-w-36 rounded border border-emerald-300/20 bg-[#07100b] px-2 py-1.5 text-[10px] text-emerald-100 outline-none focus:border-emerald-300/60 focus:ring-2 focus:ring-emerald-300/20"
+                id="audit-filter"
+                onChange={(event) => setFilter(event.target.value as Filter)}
+                value={filter}
+              >
                 {filters.map((option) => <option className="bg-[#07100b]" key={option.value} value={option.value}>{option.label}</option>)}
               </select>
               <button aria-label={live ? "Pause feed" : "Resume feed"} className="terminal-control" onClick={() => setLive(!live)} type="button">{live ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
@@ -252,7 +268,7 @@ export default function AuditLogPage() {
               <button aria-label="Clear log" className="terminal-control" onClick={clearSiteActivity} type="button"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto px-4 py-3 sm:px-6" ref={outputRef}>
+          <div className="min-h-0 flex-1 overflow-auto px-4 py-3 sm:px-6">
             {visibleEntries.length ? (
               <ol className="space-y-2" aria-live={live ? "polite" : "off"}>
                 {visibleEntries.map((entry) => (
@@ -264,10 +280,15 @@ export default function AuditLogPage() {
                 ))}
               </ol>
             ) : (
-              <p className="py-10 text-center text-xs text-emerald-100/40">No matching events. Browse the site to populate this feed.</p>
+              <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-center text-xs text-emerald-100/40">
+                <p className="m-0">No important events captured yet.</p>
+                <p className="m-0 text-[10px]">Routine page views and clicks are intentionally excluded.</p>
+              </div>
             )}
           </div>
-          <footer className="shrink-0 border-t border-emerald-400/10 px-4 py-2 text-[9px] text-emerald-100/30 sm:px-6">LOCAL BROWSER FEED · EVENT LABELS ONLY · NO FORM VALUES OR PASSWORDS</footer>
+          <footer className="shrink-0 border-t border-emerald-400/10 px-4 py-2 text-[9px] text-emerald-100/30 sm:px-6">
+            SAME-BROWSER TABS ONLY · NO PERSONAL DATA · LIVE WITHOUT RELOAD
+          </footer>
         </div>
 
         <aside className="flex min-h-[38vh] w-full shrink-0 flex-col bg-[#040a07] lg:min-h-0 lg:w-[min(42%,520px)]">
@@ -298,15 +319,18 @@ export default function AuditLogPage() {
           min-width: 28px;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(110, 231, 183, 0.18);
+          border: 1px solid rgba(110, 231, 183, 0.25);
           border-radius: 4px;
-          color: rgba(209, 250, 229, 0.68);
+          color: rgba(209, 250, 229, 0.78);
           transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
         }
-        .terminal-control:hover {
-          border-color: rgba(110, 231, 183, 0.45);
+        .terminal-control:hover,
+        .terminal-control:focus-visible {
+          border-color: rgba(110, 231, 183, 0.55);
           background: rgba(110, 231, 183, 0.1);
           color: #d1fae5;
+          outline: 2px solid rgba(110, 231, 183, 0.25);
+          outline-offset: 2px;
         }
       `}</style>
     </main>

@@ -5,6 +5,7 @@ import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CatlasLogo } from "@/components/layout/logo";
+import { recordImportantActivity } from "@/lib/site-activity";
 
 export function LoginForm() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export function LoginForm() {
       }
 
       const session = await getSession();
+      recordImportantActivity("AUTH", "Student sign-in succeeded");
       router.replace(session?.redirectTo || "/home");
       router.refresh();
     } catch {

@@ -7,6 +7,7 @@ const commandSchema = z.object({
   args: z.array(z.string().trim().max(60)).max(5).default([]),
 });
 
+type Session = NonNullable<Awaited<ReturnType<typeof auth>>>;
 type AuditRow = {
   id: string;
   category: string;
@@ -19,19 +20,20 @@ type AuditRow = {
   summary: string;
   created_at: string;
 };
-
 type SchoolRow = { id: string; name: string };
-type ProfileCountRow = { school_id: string; role: string };
 
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 30;
 const RATE_WINDOW = 60_000;
 
-function isFounderMfa(session: Awaited<ReturnType<typeof auth>>) {
+function isFounderMfa(
+  session: Session | null,
+): session is Session & { user: Session["user"] & { id: string } } {
   return (
     session?.user.role === "founder" &&
     session.user.provider === "admin" &&
-    session.user.mfaVerified === true
+    session.user.mfaVerified === true &&
+    Boolean(session.user.id)
   );
 }
 
@@ -61,13 +63,11 @@ function shortActorId(id: string) {
 }
 
 async function addAuditEntry(
-  session: NonNullable<Awaited<ReturnType<typeof auth>>>,
+  session: Session,
   action: string,
   summary: string,
   options: { category?: string; severity?: string; result?: string; requestId?: string } = {},
 ) {
-  const userId = session.user.id;
-  if (!userId) return;
   const response = await supabaseRequest("audit_log", {
     method: "POST",
     headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
@@ -77,7 +77,7 @@ async function addAuditEntry(
       result: options.result ?? "ok",
       request_id: options.requestId ?? null,
       actor_role: session.user.role ?? "unknown",
-      actor_ref: shortActorId(userId),
+      actor_ref: shortActorId(session.user.id),
       action,
       summary: summary.slice(0, 180),
     }),
@@ -94,6 +94,22 @@ function safeSince(value: string | undefined) {
   return new Date(Date.now() - milliseconds).toISOString();
 }
 
+async function countRows(path: string) {
+  const response = await supabaseRequest(path, {
+    method: "HEAD",
+    headers: { Prefer: "count=exact" },
+  });
+  if (!response.ok) throw new Error("COUNT_QUERY_FAILED");
+  const contentRange = response.headers.get("content-range");
+  const count = contentRange?.split("/").at(-1);
+  if (!count || count === "*") throw new Error("COUNT_HEADER_MISSING");
+  return Number(count);
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 async function runSafeCommand(command: string, args: string[]) {
   switch (command) {
     case "schools": {
@@ -107,35 +123,36 @@ async function runSafeCommand(command: string, args: string[]) {
     case "users": {
       const slug = args[0]?.toLowerCase();
       if (!slug) return ["usage: users <school-slug>"];
-      const [schoolsResponse, profilesResponse] = await Promise.all([
-        supabaseRequest("schools?select=id,name"),
-        supabaseRequest("profiles?select=school_id,role"),
-      ]);
-      if (!schoolsResponse.ok || !profilesResponse.ok) throw new Error("USER_COUNTS_UNAVAILABLE");
+      const schoolsResponse = await supabaseRequest("schools?select=id,name");
+      if (!schoolsResponse.ok) throw new Error("SCHOOLS_UNAVAILABLE");
       const schools = await schoolsResponse.json() as SchoolRow[];
-      const school = schools.find((item) => item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === slug);
+      const school = schools.find((item) => slugify(item.name) === slug);
       if (!school) return [`no school found for ${slug}`];
-      const profiles = await profilesResponse.json() as ProfileCountRow[];
-      const counts = new Map<string, number>();
-      for (const profile of profiles) {
-        if (profile.school_id === school.id) counts.set(profile.role, (counts.get(profile.role) ?? 0) + 1);
-      }
-      if (!counts.size) return [`no users found for ${slug}`];
-      return ["ROLE             COUNT", ...[...counts].sort(([a], [b]) => a.localeCompare(b)).map(([role, total]) => `${role.padEnd(16)} ${total}`)];
+      const roles = ["student", "class_governor", "committee", "hod", "dean", "vc", "founder"];
+      const rows = await Promise.all(roles.map(async (role) => ({
+        role,
+        total: await countRows(`profiles?select=id&school_id=eq.${encodeURIComponent(school.id)}&role=eq.${encodeURIComponent(role)}`),
+      })));
+      const present = rows.filter((row) => row.total > 0);
+      if (!present.length) return [`no users found for ${slug}`];
+      return ["ROLE             COUNT", ...present.map(({ role, total }) => `${role.padEnd(16)} ${total}`)];
     }
     case "waitlist": {
-      const response = await supabaseRequest("waitlist_signups?select=id");
-      if (!response.ok) throw new Error("WAITLIST_UNAVAILABLE");
-      const rows = await response.json() as { id: string }[];
-      return [`waitlist sign-ups: ${rows.length}`];
+      const total = await countRows("waitlist_signups?select=id");
+      return [`waitlist sign-ups: ${total}`];
     }
     case "events": {
-      const [category, sinceArg] = args;
+      const category = args[0] && !args[0].startsWith("--") ? args[0] : undefined;
       const allowed = new Set(["auth", "ai", "enrollment", "admin_action", "system", "console"]);
       if (category && !allowed.has(category)) return ["usage: events [auth|ai|enrollment|admin_action|system|console] [--since 24h]"];
       const sinceIndex = args.indexOf("--since");
-      const since = sinceIndex >= 0 ? args[sinceIndex + 1] : sinceArg?.replace(/^--since=/, "");
-      const params = new URLSearchParams({ select: "category,severity,result,actor_role,actor_ref,action,summary,created_at", order: "created_at.desc", limit: "50", created_at: `gte.${safeSince(since)}` });
+      const since = sinceIndex >= 0 ? args[sinceIndex + 1] : args.find((arg) => arg.startsWith("--since="))?.slice(8);
+      const params = new URLSearchParams({
+        select: "category,severity,result,actor_role,actor_ref,action,summary,created_at",
+        order: "created_at.desc",
+        limit: "50",
+        created_at: `gte.${safeSince(since)}`,
+      });
       if (category) params.set("category", `eq.${category}`);
       const response = await supabaseRequest(`audit_log?${params}`);
       if (!response.ok) throw new Error("AUDIT_EVENTS_UNAVAILABLE");
@@ -183,13 +200,17 @@ function rateLimited(id: string) {
 
 export async function GET(request: Request) {
   const session = await auth();
-  if (!isFounderMfa(session)) return NextResponse.json({ message: "Founder MFA sign-in is required." }, { status: 403 });
-  const id = session.user.id;
-  if (!id || rateLimited(id)) return NextResponse.json({ message: "Console rate limit reached." }, { status: 429 });
+  if (!isFounderMfa(session)) return NextResponse.json({ message: "Founder sign-in with verified MFA is required." }, { status: 403 });
+  if (rateLimited(session.user.id)) return NextResponse.json({ message: "Console rate limit reached." }, { status: 429 });
 
   const url = new URL(request.url);
   const since = safeSince(url.searchParams.get("since") ?? undefined);
-  const params = new URLSearchParams({ select: "id,category,severity,result,request_id,actor_role,actor_ref,action,summary,created_at", order: "created_at.desc", limit: "300", created_at: `gte.${since}` });
+  const params = new URLSearchParams({
+    select: "id,category,severity,result,request_id,actor_role,actor_ref,action,summary,created_at",
+    order: "created_at.desc",
+    limit: "300",
+    created_at: `gte.${since}`,
+  });
   try {
     const response = await supabaseRequest(`audit_log?${params}`);
     if (!response.ok) return NextResponse.json({ message: "Audit store is unavailable. Apply audit-log-migration.sql and configure the server service key." }, { status: 503 });
@@ -202,9 +223,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!isFounderMfa(session)) return NextResponse.json({ message: "Founder MFA sign-in is required." }, { status: 403 });
-  const id = session.user.id;
-  if (!id || rateLimited(id)) return NextResponse.json({ message: "Console rate limit reached." }, { status: 429 });
+  if (!isFounderMfa(session)) return NextResponse.json({ message: "Founder sign-in with verified MFA is required." }, { status: 403 });
+  if (rateLimited(session.user.id)) return NextResponse.json({ message: "Console rate limit reached." }, { status: 429 });
   let body: unknown;
   try {
     body = await request.json();

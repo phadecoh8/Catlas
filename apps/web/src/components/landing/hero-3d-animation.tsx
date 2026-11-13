@@ -335,7 +335,6 @@ export function Hero3DAnimation() {
           }
         });
         renderer.dispose();
-        renderer.forceContextLoss();
         renderer.domElement.remove();
       };
     }

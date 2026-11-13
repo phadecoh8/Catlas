@@ -15,21 +15,5 @@ export function getWebGL2Context(
 
   if (!context) return null;
 
-  const getPrecision = context.getShaderPrecisionFormat.bind(context);
-  try {
-    Object.defineProperty(context, "getShaderPrecisionFormat", {
-      configurable: true,
-      value: (shaderType: number, precisionType: number) => {
-        return getPrecision(shaderType, precisionType) ?? {
-          rangeMin: 127,
-          rangeMax: 127,
-          precision: 23,
-        };
-      },
-    });
-  } catch {
-    return null;
-  }
-
   return context;
 }

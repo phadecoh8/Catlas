@@ -25,14 +25,27 @@ function sphere(
 }
 
 export function Cat3D({ mood, size, className }: Cat3DProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hostRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const host = hostRef.current;
+    if (!host) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "cat-3d";
+    canvas.width = size;
+    canvas.height = size;
+    canvas.style.display = "block";
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    canvas.setAttribute("aria-hidden", "true");
+    host.appendChild(canvas);
 
     const context = getWebGL2Context(canvas);
-    if (!context) return;
+    if (!context) {
+      canvas.remove();
+      return;
+    }
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -44,6 +57,7 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
         powerPreference: "low-power",
       });
     } catch {
+      canvas.remove();
       return;
     }
 
@@ -248,18 +262,20 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
         }
       });
       renderer.dispose();
-      renderer.forceContextLoss();
+      canvas.remove();
     };
-  }, [mood]);
+  }, [mood, size]);
 
   return (
-    <canvas
+    <span
       aria-hidden="true"
-      className={`cat-3d ${className ?? ""}`}
-      height={size}
-      ref={canvasRef}
-      style={{ width: size, height: size }}
-      width={size}
+      className={`cat-3d-host ${className ?? ""}`}
+      ref={hostRef}
+      style={{
+        display: "block",
+        width: size,
+        height: size,
+      }}
     />
   );
 }

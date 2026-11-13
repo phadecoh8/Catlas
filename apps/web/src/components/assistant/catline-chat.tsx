@@ -3,56 +3,86 @@
 import {
   useRef,
   useState,
+  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import { Send, Trash2 } from "lucide-react";
+import { Mic, Plus, Send, X } from "lucide-react";
+import { CalmCatHead } from "@/components/cats/calm-cat-head";
+import {
+  type CatlineStoredMessage,
+  createId,
+} from "@/lib/catline-history";
 
-type ChatMessage = {
-  id: number;
-  role: "assistant" | "user";
-  text: string;
+type CatlineChatProps = {
+  agentName: string;
+  messages: CatlineStoredMessage[];
+  onClear: () => void;
+  onSend: (text: string, attachments: string[]) => void;
 };
 
-export function CatlineChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState("");
-  const nextMessageId = useRef(0);
+type PendingAttachment = {
+  id: string;
+  name: string;
+};
 
-  function clearChat() {
-    setMessages([]);
-    setDraft("");
-    nextMessageId.current = 0;
+export function CatlineChat({
+  agentName,
+  messages,
+  onClear,
+  onSend,
+}: CatlineChatProps) {
+  const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEmpty = messages.length === 0;
+
+  function pickAttachments() {
+    fileInputRef.current?.click();
   }
 
-  function sendMessage(event: FormEvent<HTMLFormElement>) {
+  function addAttachments(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+
+    setAttachments((current) => [
+      ...current,
+      ...files.map((file) => ({
+        id: createId(),
+        name: file.name,
+      })),
+    ]);
+    event.target.value = "";
+  }
+
+  function removeAttachment(id: string) {
+    setAttachments((current) =>
+      current.filter((attachment) => attachment.id !== id),
+    );
+  }
+
+  function clearComposer() {
+    setDraft("");
+    setAttachments([]);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const text = draft.trim();
+    const names = attachments.map((attachment) => attachment.name);
 
-    if (!text) {
+    if (!text && names.length === 0) {
       return;
     }
 
     if (text.toLowerCase() === "cmd clear") {
-      clearChat();
+      clearComposer();
+      onClear();
       return;
     }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: nextMessageId.current++,
-        role: "user",
-        text,
-      },
-      {
-        id: nextMessageId.current++,
-        role: "assistant",
-        text: "Catline is not connected yet. Your message stayed on this device and was not sent.",
-      },
-    ]);
-    setDraft("");
+    onSend(text, names);
+    clearComposer();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -63,54 +93,114 @@ export function CatlineChat() {
   }
 
   return (
-    <div className="catline-chat">
+    <div className={isEmpty ? "catline-chat empty" : "catline-chat"}>
       <div
         aria-live="polite"
         className="catline-messages"
         role="log"
       >
-        {messages.map(({ id, role, text }) => (
-          <p className={`catline-message ${role}`} key={id}>
-            {text}
-          </p>
-        ))}
+        {isEmpty ? (
+          <section
+            aria-labelledby="catline-heading"
+            className="catline-welcome"
+          >
+            <CalmCatHead className="catline-cat" size={140} />
+            <h1 id="catline-heading">Hello from Catline</h1>
+            <p>Your Catlas assistant is here to help.</p>
+            <p className="catline-agent-hint">Agent: {agentName}</p>
+          </section>
+        ) : (
+          messages.map((message) => (
+            <p
+              className={`catline-message ${message.role}`}
+              key={message.id}
+            >
+              {message.text}
+              {message.attachments && message.attachments.length > 0 && (
+                <span className="catline-message-attachments">
+                  {message.attachments.map((name) => (
+                    <span key={name}>{name}</span>
+                  ))}
+                </span>
+              )}
+            </p>
+          ))
+        )}
       </div>
-      <div className="catline-chat-tools">
-        <button
-          aria-label="Clear chat"
-          className="catline-clear-button"
-          disabled={messages.length === 0}
-          onClick={clearChat}
-          title="Type cmd clear to clear the chat"
-          type="button"
-        >
-          <Trash2 aria-hidden="true" />
-          cmd clear
-        </button>
-      </div>
-      <form className="catline-composer" onSubmit={sendMessage}>
-        <label className="sr-only" htmlFor="catline-message">
-          Message Catline
-        </label>
-        <textarea
-          id="catline-message"
-          maxLength={2000}
-          onKeyDown={handleKeyDown}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder="Ask Catline a question..."
-          rows={1}
-          value={draft}
-        />
-        <button
-          aria-label="Send message"
-          disabled={!draft.trim()}
-          type="submit"
-        >
-          <Send aria-hidden="true" />
-        </button>
+      <form className="catline-composer" onSubmit={handleSubmit}>
+        <div className="catline-composer-box">
+          {attachments.length > 0 && (
+            <ul className="catline-attachments">
+              {attachments.map((attachment) => (
+                <li key={attachment.id}>
+                  <span className="catline-attachment-name">
+                    {attachment.name}
+                  </span>
+                  <button
+                    aria-label={`Remove ${attachment.name}`}
+                    onClick={() => removeAttachment(attachment.id)}
+                    type="button"
+                  >
+                    <X aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className="sr-only" htmlFor="catline-message">
+            Message Catline
+          </label>
+          <textarea
+            id="catline-message"
+            maxLength={2000}
+            onKeyDown={handleKeyDown}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Ask Catline anything..."
+            rows={1}
+            value={draft}
+          />
+          <div className="catline-composer-actions">
+            <button
+              aria-label="Attach files or images"
+              className="catline-composer-button"
+              onClick={pickAttachments}
+              type="button"
+            >
+              <Plus aria-hidden="true" />
+            </button>
+            <span className="catline-composer-spacer" />
+            <button
+              aria-label="Send a voice note"
+              className="catline-composer-button"
+              disabled
+              title="Voice notes are coming soon"
+              type="button"
+            >
+              <Mic aria-hidden="true" />
+            </button>
+            <button
+              aria-label="Send message"
+              className="catline-composer-button send"
+              disabled={!draft.trim() && attachments.length === 0}
+              type="submit"
+            >
+              <Send aria-hidden="true" />
+            </button>
+          </div>
+          <input
+            aria-hidden="true"
+            className="catline-file-input"
+            multiple
+            onChange={addAttachments}
+            ref={fileInputRef}
+            tabIndex={-1}
+            type="file"
+          />
+        </div>
       </form>
       <p className="catline-privacy-note">
-        Catline is getting ready. Do not include personal or account details.
+        Chats stay on this device. Do not include personal or account
+        details.
       </p>
     </div>
   );

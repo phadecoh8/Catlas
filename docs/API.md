@@ -66,7 +66,7 @@ Each row matches a folder in `apps/api/src/modules/`.
 | departments | `GET /departments`, founder: `POST`, `PATCH`, `DELETE` (the Dean in a future version) |
 | users | `GET /me`, `PATCH /me`, `DELETE /me` (account deletion, immediate and permanent), founder: `PATCH /users/:id/level` (correct a student's declared level from a feedback item; audit logged) |
 | accounts | founder: `POST /accounts` (create a dashboard account with a temporary password), `POST /accounts/:id/reset-2fa` |
-| verification | `POST /verification/matric`, admin: `POST /verification/records` |
+| enrollment review | School admin: list pending student signups and accept or decline one; acceptance enables student access. Pending and declined profiles cannot access student routes. |
 | academic-sessions | `GET /academic-sessions/current`, VC: `PUT /academic-sessions/current` |
 | graduation | VC: `GET /graduation/batches`, `POST /graduation/batches/:id/approve`, `POST /graduation/batches/:id/decline` |
 | buildings | `GET /buildings/:id`, VC: `POST`, `PATCH`, `DELETE` |
@@ -92,7 +92,7 @@ Each row matches a folder in `apps/api/src/modules/`.
 
 ## Bulk import flow
 
-1. VC downloads the CSV template for the kind (verification list, locations, buildings, indoor places).
+1. VC downloads the CSV template for locations, buildings or indoor places.
 2. VC uploads the file to `preview`. The API validates every row and returns row-level errors. Nothing is saved.
 3. If the file is clean, VC calls `commit`. The import is all-or-nothing and written to the audit log.
 4. Cells starting with `=`, `+`, `-` or `@` are neutralised, file size is limited, and `school_id` always comes from the account.

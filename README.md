@@ -37,7 +37,7 @@ A navigation platform for higher institutions in Nigeria. Students and visitors 
 
 Every user picks their **school** at login and lands in that school's own space. New users verify their email. Emails (Resend) cover verification, password reset and notices. Dashboard accounts (School Admin, Dean, HOD, committee, governor) are created by the founder and handed over with a one-time temporary password that must be changed at first login.
 
-**Verification (current plan):** during testing the founder verifies numbers manually. If a school approves Catlas, it sends a list of valid numbers to upload. If an official API is found, it is used instead.
+**Student enrollment verification:** the school checks whether each new signup is actually a student. Email verification confirms control of the email address; it does not establish student status. A signup remains pending until the school accepts it. Once accepted, the student is signed in and sent automatically to their student home page. The school manages this review; Catlas does not validate enrollment numbers on the school's behalf.
 
 ## Academic session
 

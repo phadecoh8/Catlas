@@ -31,8 +31,7 @@ The **Staff** role is planned for a future version (see Future versions).
 - At sign-up the user gives surname, first name, phone number, school, faculty, department, level, email and password. JAMB Reg. No is optional for freshers. Catlas does not use usernames.
 - Before the account is created, show a consent line that links to the privacy policy and terms of service, as data protection law requires.
 - **Level is self-declared.** If a student's level is wrong, they send feedback and it reaches the founder dashboard, where the owner corrects it.
-- **Verification now:** the owner verifies numbers manually while testing. Build a `VerificationRecord` table an admin can fill by hand.
-- **Verification later:** a school can send a list of valid numbers (CSV) to upload. If an official API is found, it replaces the upload. Keep this behind a `verification` service so the source can be swapped.
+- **Enrollment review:** the school checks whether each signup is an actual student and accepts or declines the request. Until accepted, the account cannot enter the student app. After acceptance, sign the student in and redirect them automatically to the student home page. Email verification confirms control of the email address only; it does not verify enrollment.
 
 **Supabase Auth** verifies student email addresses and manages their passwords and refresh sessions. Resend covers notices (announcements, class changes and assignment reminders).
 
@@ -50,10 +49,11 @@ Supabase Auth owns student passwords, email verification and refresh sessions. T
 
 1. A student signs up with email, password and their school, faculty, department and level. Visitors use **Continue as guest** and do not create accounts. Dashboard roles use email and password on the shared admin login page.
 2. The Next.js signup route sends validated details to Supabase Auth. A database trigger creates a student profile with the `student` role; user metadata cannot assign an admin role.
-3. Supabase sends the email verification link. A student must verify the email before password sign-in succeeds.
-4. Auth.js authenticates students with Supabase Auth and keeps its access and refresh tokens in an encrypted, httpOnly cookie. Tokens are not exposed to browser JavaScript.
-5. Auth.js refreshes expired student access tokens server-side and revokes the Supabase session at logout. Row-level security limits profile reads to the signed-in user.
-6. Admin sign-in continues through Express, including its 2FA flow and role-specific dashboard. Admin access and refresh tokens remain in the Auth.js cookie.
+3. Supabase sends the email verification link. A student must verify the email before sign-in; this confirms the email address only.
+4. The school reviews the signup to determine whether the person is a student. Keep the account pending and deny access to student app routes until the school accepts it. The school may decline the request.
+5. When the school accepts the request, activate student access, establish the signed-in session, and redirect the student automatically to the student home page. Subsequent sign-ins also go to the student's page.
+6. Auth.js authenticates students with Supabase Auth and keeps its access and refresh tokens in an encrypted, httpOnly cookie. Tokens are not exposed to browser JavaScript. Auth.js refreshes expired student access tokens server-side and revokes the Supabase session at logout. Row-level security limits profile reads to the signed-in user.
+7. Admin sign-in continues through Express, including its 2FA flow and role-specific dashboard. Admin access and refresh tokens remain in the Auth.js cookie.
 
 Two secrets, never shared: `AUTH_SECRET` (frontend, encrypts the Auth.js cookie) and `JWT_ACCESS_SECRET` (backend, signs access tokens).
 
@@ -139,7 +139,7 @@ The landing page is built before the app and lives at `/`. The owner provides th
 - **Assignments:** class governors post where and when to submit each assignment (course, title, deadline, submission location tagged from the school's locations, notes). Students see them in the classroom area, with in-app and email reminders.
 - **Report a problem:** a button on every location card and in the help centre. The user picks a type (wrong location, wrong photo, wrong office or room details, app bug, other) and may add a note. Location reports go to the VC dashboard; app bugs go to the founder dashboard.
 - **Low data mode:** a toggle in Settings, also suggested when the connection is slow. It loads small images (or none until tapped), turns off animations, loads the map only after a tap, and avoids prefetching. Use Cloudinary automatic format and quality in every mode.
-- **Bulk upload (VC dashboard):** CSV upload for verification lists, locations, buildings and indoor places. Provide a downloadable template. Validate every row with Zod and show a preview with row-level errors before anything is saved. Import all-or-nothing, set `school_id` from the uploader's account and never from the file, neutralise spreadsheet formulas (cells starting with `=`, `+`, `-` or `@`), limit file size, and write the import to the audit log.
+- **Bulk upload (VC dashboard):** CSV upload for locations, buildings and indoor places. Provide a downloadable template. Validate every row with Zod and show a preview with row-level errors before anything is saved. Import all-or-nothing, set `school_id` from the uploader's account and never from the file, neutralise spreadsheet formulas (cells starting with `=`, `+`, `-` or `@`), limit file size, and write the import to the audit log.
 - **Settings:** Preferences (including Account), Feedback, privacy policy, terms of service, low data mode, and Log out.
   - **Account page:** profile photo upload (Cloudinary); surname and first name (editable in case of a mistake); school and department (shown); and **Delete account**. Catlas does not collect or use usernames.
   - **Delete account:** the user must type "delete account" and re-enter their password. The account and its personal data are then deleted from the database immediately, with no waiting period. This cannot be undone, so the confirmation screen must say so.
@@ -161,7 +161,7 @@ Rules:
 - Send it no personal data (see Academic session).
 - If it cannot help, it points to Report a problem or the user's school.
 - Label it clearly as an AI assistant. Rate limit it, and fall back to the FAQ when the free tier is unavailable.
-- Treat everything users type as untrusted (prompt injection). Do not store conversation text by default.
+- Treat everything users type as untrusted (prompt injection). Chats stay on the user's device (browser storage only) and are never sent to the server.
 - Catline is opened from its own footer tab. The assistant page does not send messages until the Gemini service is connected.
 
 ## Routing, navigation and indoor mapping
@@ -193,7 +193,7 @@ HTML/text content and previewing an email. Delivery to confirmed subscribers
 requires the newsletter email endpoint, which is not implemented yet.
 
 1. **Founder:** all schools and registered-user counts per school, creation of dashboard accounts, adding faculties and departments for a school (during the demo), app-bug reports, the waitlist list, feedback (including requests to correct a student's level), the audit log for all schools, and the newsletter subscribers.
-2. **VC:** school-wide student section, user feedback, session dates, a location and building editor (add, edit, photos, visitor access), bulk CSV upload, verification lists, reports about locations, graduation approvals, school-wide announcements and events, and the school's audit log.
+2. **VC:** school-wide student section, pending enrollment reviews, user feedback, session dates, a location and building editor (add, edit, photos, visitor access), bulk CSV upload, reports about locations, graduation approvals, school-wide announcements and events, and the school's audit log.
 3. **Dean:** student section for the faculty, user feedback; faculty announcements and events.
 4. **Department (HOD and committee):** each level 100 to 500 as a section, user feedback; department announcements and events. Cannot post classes.
 5. **Class governor:** own department and level; post class updates and assignments, one at a time.

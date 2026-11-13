@@ -14,6 +14,15 @@ KEEP KEYS PRIVATE
   key. The server-side waitlist routes also read SUPABASE_SECRET_KEY.
 - AUTH_SECRET is an Auth.js cookie secret. It is not a Supabase key.
 
+WHAT THIS PROJECT IS USED FOR
+
+This Supabase project serves the web app: student accounts (Supabase Auth),
+the signup dropdowns (schools, faculties, departments), student profiles, and
+the waitlist. The Express API in apps/api uses its own separate Postgres
+database configured with DATABASE_URL in apps/api/.env. Do not reuse this
+project's keys there. The waitlist database documented in the AGENTS.md
+approved stack is this project's waitlist_signups table.
+
 1. CREATE OR OPEN THE PROJECT
 
 Open https://supabase.com/dashboard and create a project for Catlas, or open
@@ -43,7 +52,13 @@ In the project dashboard, open SQL Editor, choose New query, paste all of the
 SQL found under FULL SQL SCRIPT below, and click Run. This creates the waitlist
 table, schools, faculties, departments, student profiles, access policies and
 a profile trigger. The trigger always creates student profiles with role
-student; it does not take a role from signup form metadata.
+student; it does not take a role from signup form metadata. Student status is
+reviewed by the school: email confirmation verifies the email address, not
+student enrollment. Keep a signup pending and block student app access until
+the school accepts it. Acceptance activates access and sends the student
+automatically to the student home page. The schema and app need the school's
+review status and decision fields/policies before this workflow can be used;
+do not treat email confirmation alone as acceptance.
 
 4. ADD THE DEMO SCHOOL AND FACULTIES
 
@@ -99,6 +114,22 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_VALUE
 SUPABASE_SECRET_KEY=sb_secret_YOUR_VALUE
 SITE_URL=http://localhost:3000
 AUTH_SECRET=GENERATE_A_RANDOM_SECRET
+AUTH_URL=
+
+AUTH_URL is the Auth.js base URL. Leave it empty for local development and
+set it to the production site URL when you publish if Auth.js asks for it.
+
+Two legacy variable names are still read as fallbacks by some server routes
+(apps/web/src/app/api/founder/waitlist/route.ts reads
+NEXT_PUBLIC_SUPABASE_ANON_KEY, and several routes read
+SUPABASE_SERVICE_ROLE_KEY). To be safe while that code is in place, set them
+to the same values as their replacements:
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_YOUR_VALUE
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_YOUR_VALUE
+
+Never rename the secret key or service role key with a NEXT_PUBLIC_ prefix;
+both must stay server-side only.
 
 AUTH_SECRET can be generated locally with this command, then copied into the
 environment file:
@@ -120,22 +151,28 @@ Then open Authentication > URL Configuration:
 
 - Set Site URL to http://localhost:3000 for local development.
 - Add http://localhost:3000/verify-email to the Redirect URLs allow list.
+- Add http://localhost:3000/reset-password to the Redirect URLs allow list
+  too. The password reset pages are not finished yet, so the link is unused
+  today; adding it now avoids a broken reset flow after launch.
 
 The signup route redirects confirmation emails to /verify-email. When you
 publish the site, replace the local URLs with the production site URL and add
-the production verification URL to the allow list.
+the production verification and reset URLs to the allow list.
 
 Supabase's built-in email sender is for limited testing. It only sends to
 project team email addresses and has a very low limit. To send confirmations
-to other addresses, configure custom SMTP in the Supabase Auth settings.
+to other addresses, configure custom SMTP under Authentication
+(Advanced > SMTP Settings in the project dashboard).
 
 7. RESTART AND TRY SIGNUP
 
 Restart the dev server after changing .env.local. Open http://localhost:3000/signup,
 choose a school, faculty and department, and create an account with an email
-you can access. Click the confirmation link, then sign in at /login. Check
-Authentication > Users for the Auth user and Table Editor > profiles for the
-student profile.
+you can access. Click the confirmation link, then wait for the school to
+review and accept the enrollment request. Once accepted, the student is sent
+automatically to their student home page. Check Authentication > Users for the
+Auth user and Table Editor > profiles for the student profile and its school
+review status.
 
 If the school dropdown is empty, confirm that the school, faculty and
  department rows are active and the project URL/publishable key are correct.
@@ -358,6 +395,21 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.create_student_profile();
+
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_updated_at on public.profiles;
+create trigger profiles_updated_at
+  before update on public.profiles
+  for each row execute function public.touch_updated_at();
 
 alter table public.schools enable row level security;
 alter table public.faculties enable row level security;

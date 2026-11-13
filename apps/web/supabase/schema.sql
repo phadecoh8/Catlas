@@ -208,6 +208,21 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.create_student_profile();
 
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_updated_at on public.profiles;
+create trigger profiles_updated_at
+  before update on public.profiles
+  for each row execute function public.touch_updated_at();
+
 alter table public.schools enable row level security;
 alter table public.faculties enable row level security;
 alter table public.departments enable row level security;

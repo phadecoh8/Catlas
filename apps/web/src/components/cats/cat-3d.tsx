@@ -8,6 +8,7 @@ type Cat3DProps = {
   mood: "happy" | "crying" | "searching" | "calm";
   size: number;
   className?: string;
+  part?: "full" | "head";
 };
 
 function sphere(
@@ -24,7 +25,12 @@ function sphere(
   return mesh;
 }
 
-export function Cat3D({ mood, size, className }: Cat3DProps) {
+export function Cat3D({
+  mood,
+  size,
+  className,
+  part = "full",
+}: Cat3DProps) {
   const hostRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -81,7 +87,7 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
       metalness: 0.08,
     });
     const rig = new THREE.Group();
-    const body = sphere(fur, [0.46, 0.35, 0.48], [0, -0.2, 0]);
+    const headOnly = part === "head";
     const head = new THREE.Group();
     head.position.set(0, 0.27, 0.25);
     head.add(sphere(fur, [0.4, 0.37, 0.31], [0, 0, 0.04]));
@@ -132,19 +138,30 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
       new THREE.TubeGeometry(mouthCurve, 12, 0.012, 6, false),
       face,
     ));
-    rig.add(body, head);
+    rig.add(head);
 
-    const tailCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.37, -0.22, -0.2),
-      new THREE.Vector3(-0.65, -0.03, -0.22),
-      new THREE.Vector3(-0.7, 0.3, -0.2),
-      new THREE.Vector3(-0.53, 0.5, -0.16),
-    ]);
-    const tail = new THREE.Mesh(
-      new THREE.TubeGeometry(tailCurve, 24, 0.075, 10, false),
-      fur,
-    );
-    rig.add(tail);
+    if (!headOnly) {
+      const body = sphere(fur, [0.46, 0.35, 0.48], [0, -0.2, 0]);
+
+      rig.add(body);
+    }
+
+    let tail: THREE.Mesh | undefined;
+
+    if (!headOnly) {
+      const tailCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.37, -0.22, -0.2),
+        new THREE.Vector3(-0.65, -0.03, -0.22),
+        new THREE.Vector3(-0.7, 0.3, -0.2),
+        new THREE.Vector3(-0.53, 0.5, -0.16),
+      ]);
+
+      tail = new THREE.Mesh(
+        new THREE.TubeGeometry(tailCurve, 24, 0.075, 10, false),
+        fur,
+      );
+      rig.add(tail);
+    }
 
     const tears: THREE.Mesh[] = [];
     if (mood === "crying") {
@@ -160,7 +177,7 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
       }
     }
 
-    if (mood === "searching") {
+    if (!headOnly && mood === "searching") {
       const handle = new THREE.Mesh(
         new THREE.CylinderGeometry(0.025, 0.025, 0.34, 10),
         face,
@@ -175,18 +192,23 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
       rig.add(handle, glass);
     }
 
-    const shadow = new THREE.Mesh(
-      new THREE.CircleGeometry(0.62, 32),
-      new THREE.MeshBasicMaterial({
-        color: 0x17181c,
-        transparent: true,
-        opacity: 0.15,
-        depthWrite: false,
-      }),
-    );
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = -0.62;
-    scene.add(rig, shadow);
+    if (headOnly) {
+      scene.add(rig);
+    } else {
+      const shadow = new THREE.Mesh(
+        new THREE.CircleGeometry(0.62, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0x17181c,
+          transparent: true,
+          opacity: 0.15,
+          depthWrite: false,
+        }),
+      );
+
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = -0.62;
+      scene.add(rig, shadow);
+    }
     scene.add(new THREE.HemisphereLight(0xffffff, 0x596071, 2));
     const key = new THREE.DirectionalLight(0xffffff, 2.4);
     key.position.set(-2, 4, 5);
@@ -194,8 +216,13 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
     const rim = new THREE.DirectionalLight(0x8bbdff, 1.1);
     rim.position.set(3, 2, -3);
     scene.add(rim);
-    camera.position.set(0, 0.05, 4.4);
-    camera.lookAt(0, 0.02, 0);
+    if (headOnly) {
+      camera.position.set(0, 0.3, 2.6);
+      camera.lookAt(0, 0.26, 0);
+    } else {
+      camera.position.set(0, 0.05, 4.4);
+      camera.lookAt(0, 0.02, 0);
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x000000, 0);
 
@@ -238,8 +265,10 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
           eye.scale.y = blink;
         });
       }
-      tail.rotation.x = Math.sin(time * (mood === "happy" ? 0.004 : 0.002))
-        * (mood === "happy" ? 0.3 : 0.14);
+      if (tail) {
+        tail.rotation.x = Math.sin(time * (mood === "happy" ? 0.004 : 0.002))
+          * (mood === "happy" ? 0.3 : 0.14);
+      }
       tears.forEach((tear, index) => {
         tear.position.y = -0.14 - ((time * 0.0005 + index * 0.5) % 0.2);
       });
@@ -264,7 +293,7 @@ export function Cat3D({ mood, size, className }: Cat3DProps) {
       renderer.dispose();
       canvas.remove();
     };
-  }, [mood, size]);
+  }, [mood, size, part]);
 
   return (
     <span

@@ -174,8 +174,17 @@ automatically to their student home page. Check Authentication > Users for the
 Auth user and Table Editor > profiles for the student profile and its school
 review status.
 
-If the school dropdown is empty, confirm that the school, faculty and
- department rows are active and the project URL/publishable key are correct.
+If the school dropdown is empty, check the Network panel for
+`/api/auth/schools`. A successful response should include a `schools` array.
+If it returns an error, confirm that `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` point to this same Supabase project,
+restart the web dev server after changing `.env.local`, and run the full SQL
+script above in that project's SQL Editor. The script seeds
+Federal University of Oye, Ikole Campus and is safe to run again. In Table
+Editor, confirm that `public.schools` contains that name and its `is_active`
+value is `true`; also confirm the related faculty and department rows are
+active. The public select grants and active-row policies at the end of the
+script must be applied for all three dropdown tables.
 If signup says it is not configured, restart the server after saving the env
 file and check the two NEXT_PUBLIC_SUPABASE_* values.
 

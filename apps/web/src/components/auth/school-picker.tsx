@@ -141,7 +141,9 @@ export function SchoolPicker({
       ) : null}
       {!loadError && schools.length === 0 ? (
         <p className="auth-form-note">
-          School options will appear once the school database is set up.
+          No active schools were returned. Check that this app uses the same
+          Supabase project where the school was added, and that its school row
+          is active.
         </p>
       ) : null}
     </>
